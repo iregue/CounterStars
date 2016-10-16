@@ -12,7 +12,7 @@ var port = process.env.PORT || 8888
 const Observaciones = require('./models/observaciones');
   app.use(bodyParser.urlencoded({ extended: true  }))
   app.use(bodyParser.json())
-  app.use(paginate.middleware(10,50));
+  app.use(paginate.middleware(50,50));
     //app.use(express.methodOverride());
     //app.use(express.router);
 
@@ -28,8 +28,124 @@ app.get('/', function(req,res) //request respuesta
 	res.send('Hola mundo');
 });
 
-app.get('/api/observaciones/', function(req,res) //request respuesta
+app.get('/api/observaciones?', function(req,res) //request respuesta
 {
+		//comprobacion del parametro page
+		if(req.query.page ==null)
+		{
+			var pagina = 1;
+			console.log('pagina por defecto');
+		}
+		else
+		{
+			var pagina = req.query.page;
+			console.log('pagina establecida por parametro: '+ req.query.page);
+		}
+		//Comprobacion del limite deobjetos a mostrar por pagina
+		if(req.query.limit!=null && req.query.limit < 51 && req.query.limit>-1)
+		{
+			var limite = req.query.limit;
+			console.log('limite= '+limite);
+		}
+		else
+		{
+			var limite = 50;
+			console.log('limite maximo 50');
+		}
+	//comprueba si hay que filtar parametros
+	if(req.query.fields || req.query.startdate || req.query.enddate || req.query.latitude || req.query.longitude)
+	{
+		
+		console.log('peticion con campos');
+		console.log(req.query.startdate);
+		//Comprobacion de campos solicitados
+		if(req.query.fields!=null)
+		{
+			var fields = req.query.fields, checkId = "id"
+			
+			//comprueba si esta el atributo id como resultado
+			if(fields.indexOf(checkId)!== -1)
+				{
+				console.log('id true');
+				//var fields = req.query.fields +" -_id"
+				}
+			else
+				{
+				console.log('id false');
+				var fields = req.query.fields +" -_id"
+				}
+		}
+
+		if(req.query.startdate && req.query.enddate)
+		{
+			console.log('startdate y enddate');
+			
+			Observaciones.paginate({fecha: {$gte: req.query.startdate, $lt:req.query.enddate}}, {page: pagina, limit: limite}, function(err,observaciones){
+				if(err)
+				{
+					return next(err);
+				}
+				res.send(observaciones);
+			});
+			/*Observaciones.find({fecha: {$gte: req.query.startdate, $lt:req.query.enddate}},fields,function(err,observaciones)
+		{
+			if(err) return next(err);
+			res.send(observaciones);
+			
+		});*/
+		}
+		if(req.query.startdate && req.query.enddate==null)
+		{
+			console.log('startdate');
+			
+			Observaciones.paginate({fecha: {$gte: req.query.startdate}}, {page: pagina, limit: limite}, function(err,observaciones){
+				if(err)
+				{
+					return next(err);
+				}
+				res.send(observaciones);
+			});
+		}
+		if(req.query.latitude)
+		{
+
+		}
+		if(req.query.longitude)
+		{
+
+		}
+		console.log(fields);
+/*fecha: {$gte: "2016-10-14T13:46:53.007Z", $lt:"2016-10-14T13:46:54.007Z"}*/
+/*fecha: {$gte: req.query.startdate, $lt:req.query.enddate}*/
+		/*Observaciones.geoNear([req.query.longitude, req.query.latitude],
+		{
+			near: [2.12376, -1.3123],
+			maxDistance: 1,
+			spherical:true},
+			function(err,results){
+				console.log(results);
+		});*/
+		/*Observaciones.find({fecha: {$gte: req.query.startdate, $lt:req.query.enddate}},fields,function(err,observaciones)
+		{
+			if(err) return next(err);
+			res.send(observaciones);
+			
+		});*/
+	}
+	else
+	{
+		console.log('peticion sin campos');
+
+			Observaciones.paginate({}, {page: pagina, limit: limite}, function(err,observaciones){
+				if(err)
+				{
+					return next(err);
+				}
+				res.send(observaciones);
+			});
+	}
+});
+/*
   Observaciones.find(function(err, observaciones)
 {
   if(err)
@@ -40,7 +156,7 @@ app.get('/api/observaciones/', function(req,res) //request respuesta
 
 }).limit(20);
 	//res.send('Prueba correcta1 '+ req.params.name);
-});
+});*/
 /*
 app.get('/api/observaciones/', function(req,res) //request respuesta
 {

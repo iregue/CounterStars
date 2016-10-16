@@ -1,0 +1,16 @@
+primero iniciar contenedor de mongo
+
+docker run --name mongo -v /home/ignacio/mongo/:/data/db -h starsdb -d mongo
+
+borrar contenedor mongo
+
+docker rm mongo
+
+docker stop mongo
+
+consultar bd mongo
+docker exec -it mongo mongo
+
+iniciar contenedor node
+
+docker run -it -p 80:8888 -v /home/ignacio/IdeaProjects/CounterStars/:/usr/src/app --link mongo:mongo --name counter-star counter-star bash

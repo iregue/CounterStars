@@ -5,7 +5,7 @@ var mongoosePaginate = require('mongoose-paginate');
 var observaciones = new Schema({
 	latitud: Number,
 	longitud: Number,
-	fecha: String
+	fecha: Date
 });
 
 observaciones.plugin(mongoosePaginate);
