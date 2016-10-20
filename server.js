@@ -118,7 +118,7 @@ app.get('/api/observaciones?', function(req,res) //request respuesta
 			Observaciones.paginate({fecha: {$gte: req.query.startdate, $lt:end_date},
 									location: 
 									{
-										$nearSphere:[2.12376,-1.3123],
+										$nearSphere:[req.query.lon,req.query.lat],
 										$maxDistance: distance_km
 									}
 									}, {page: pagina, limit: limite, select:fields}, function(err,observaciones){
@@ -153,7 +153,7 @@ app.get('/api/observaciones?', function(req,res) //request respuesta
 			console.log('no startdate y location ok');
 			Observaciones.paginate({location: 
 									{
-										$nearSphere:[2.12376,-1.3123],
+										$nearSphere:[req.query.lon,req.query.lat],
 										$maxDistance: distance_km
 									}
 									}, {page: pagina, limit: limite, select:fields}, function(err,observaciones){
@@ -195,31 +195,39 @@ app.get('/api/observaciones/:observacionId', function(req,res) //request respues
 app.post('/api/observaciones', function(req,res) //request respuesta
 {
   console.log('POST /api/post');
-  console.log(req.body);
-  var isoDate = new Date().toISOString();
+  //Comprobacion parametro de POST correctos
+  	if(!req.body.lon ||!req.body.lat)
+	  {
+	  	res.status(406).send('{Location Error: longitude as log and latitude as lat required}');
+	  }
+	  else
+	  {
+	  console.log(req.body);
+	  var isoDate = new Date().toISOString();
 
-  var observacion = new Observaciones();
-  observacion.location = { type:"Point",coordinates:[req.body.longitude,req.body.latitude]},
-  //observacion.location.longitude = req.body.location,
-  //observacion.longitud = req.body.longitud,
-  observacion.fecha = isoDate
+	  var observacion = new Observaciones();
+	  observacion.location = { type:"Point",coordinates:[req.body.lon,req.body.lat]},
+	  //observacion.location.longitude = req.body.location,
+	  //observacion.longitud = req.body.longitud,
+	  observacion.fecha = isoDate
 
-  observacion.save(function(err, observacion){
-    if(!err)
-    {
-     console.log('Observacion guardada');
-     console.log(observacion);
-     res.status(200).json(observacion)
+	  observacion.save(function(err, observacion){
+	    if(!err)
+	    {
+	     console.log('Observacion guardada');
+	     console.log(observacion);
+	     res.status(200).json(observacion)
 
-   }
-    else
-    {
+	   }
+	    else
+	    {
 
-      console.log(err);
-      res.status(500).send(err.message);
-    }
+	      console.log(err);
+	      res.status(500).send(err.message);
+	    }
 
-  });
+	  });
+	}
 	//res.send('Prueba correcta '+ observacion);
 });
 //app.require('./routes');
