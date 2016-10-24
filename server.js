@@ -28,7 +28,7 @@ app.get('/', function(req,res) //request respuesta
 	res.send('Hola mundo');
 });
 
-app.get('/api/observaciones?', function(req,res) //request respuesta
+app.get('/api/observations?', function(req,res) //request respuesta
 {
 		//comprobacion del parametro page
 		if(req.query.page ==null)
@@ -89,6 +89,7 @@ app.get('/api/observaciones?', function(req,res) //request respuesta
 			}
 			else
 			{
+				//Se establece como fecha final, la actual del servidor
 				var end_date =  new Date().toISOString();
 				console.log('fecha final creada: '+ end_date);
 			}
@@ -98,15 +99,24 @@ app.get('/api/observaciones?', function(req,res) //request respuesta
 		var location_ok = false;
 		if(req.query.lon || req.query.lat || req.query.distance)
 		{
-			if(!req.query.lon || !req.query.lat || !req.query.distance)
+			if(!req.query.lon || !req.query.lat)
 			{
-				return res.send('{location: Miss parameter,require longitude as log, latitude as lat and distance in km}');
+				return res.send('{location: Miss parameter,require longitude as log, latitude as lat}');
 			}
 			else
 			{
-				var distance_km = req.query.distance/6371;
-				console.log('distacia en km: '+ distance_km);
-				location_ok = true;
+				if(req.query.distance)
+				{
+					var distance_km = req.query.distance/6371;
+					console.log('distacia en km: '+ distance_km);
+					location_ok = true;
+				}
+				else
+				{
+					distance_km = 0;
+					console.log('distacia en km: '+ distance_km);
+					location_ok = true;
+				}
 			}
 		}
 
@@ -129,12 +139,7 @@ app.get('/api/observaciones?', function(req,res) //request respuesta
 
 				return res.send(observaciones);
 			});
-			/*Observaciones.find({fecha: {$gte: req.query.startdate, $lt:req.query.enddate}},fields,function(err,observaciones)
-		{
-			if(err) return next(err);
-			res.send(observaciones);
-			
-		});*/
+
 		}
 		if(req.query.startdate && !location_ok)
 		{
@@ -170,7 +175,8 @@ app.get('/api/observaciones?', function(req,res) //request respuesta
 	{
 		console.log('peticion sin campos');
 
-			Observaciones.paginate({}, {page: pagina, limit: limite, select:fields}, function(err,observaciones){
+			Observaciones.paginate({}, {page: pagina, limit: limite, select:fields}, function(err,observaciones)
+			{
 				if(err)
 				{
 					return next(err);
@@ -180,7 +186,7 @@ app.get('/api/observaciones?', function(req,res) //request respuesta
 	}
 });
 
-app.get('/api/observaciones/:observacionId', function(req,res) //request respuesta
+app.get('/api/observations/:observacionId', function(req,res) //request respuesta
 {
   Observaciones.findById(req.params.observacionId, function(err, observacion)
 {
@@ -192,7 +198,7 @@ app.get('/api/observaciones/:observacionId', function(req,res) //request respues
 	//res.send('Prueba correcta2 '+ req.params.name);
 });
 
-app.post('/api/observaciones', function(req,res) //request respuesta
+app.post('/api/observations', function(req,res) //request respuesta
 {
   console.log('POST /api/post');
   //Comprobacion parametro de POST correctos
