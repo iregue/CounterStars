@@ -8,7 +8,7 @@ var observaciones = new Schema({
 		type:{type:String},
 		coordinates:[Number]
 	},
-	fecha: Date
+	date: Date
 });
 
 observaciones.plugin(mongoosePaginate);

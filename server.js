@@ -56,8 +56,11 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		//Comprobacion de campos solicitados
 		if(req.query.fields!=null)
 		{
-			var fields = req.query.fields, checkId = "id"
-			
+			var str = req.query.fields;
+			//var fields = req.query.fields, checkId = "id"
+			var fields = str.replace(/,/g," ");
+			//console.log(fields)
+			checkId = "id";
 			//comprueba si esta el atributo id como resultado
 			if(fields.indexOf(checkId)!== -1)
 				{
@@ -67,7 +70,9 @@ app.get('/api/observations?', function(req,res) //request respuesta
 			else
 				{
 				console.log('id false');
-				var fields = req.query.fields +" -_id"
+				//var fields = req.query.fields +" -_id"
+				fields = fields +" -_id";
+				//console.log(fields);
 				}
 		}
 
@@ -97,24 +102,51 @@ app.get('/api/observations?', function(req,res) //request respuesta
 
 		//Se comprueba que existan todos los parametros para filtrar mediante una localizacion.
 		var location_ok = false;
+		var filtra_lat = false;
+		var filtra_lon = false;
 		if(req.query.lon || req.query.lat || req.query.distance)
 		{
 			if(!req.query.lon || !req.query.lat)
 			{
-				return res.send('{location: Miss parameter,require longitude as log, latitude as lat}');
+				if(!req.query.distance || (!req.query.lon && !req.query.lat))
+				{
+					return res.send('{Error: Miss parameter}')
+				}
+				else
+				{
+					if(req.query.lat)
+					{
+						var lat_bigger = Number(req.query.lat) - Number(req.query.distance);
+						var lat_less = Number(req.query.lat) + Number(req.query.distance);
+						filtra_lat = true;
+						console.log('Filtrado por latitudes');
+						console.log('lat_bigger : '+lat_bigger);
+						console.log('lat_less : '+lat_less);
+					}
+					else
+					{
+						var lon_bigger = Number(req.query.lon) - Number(req.query.distance);
+						var lon_less = Number(req.query.lon) + Number(req.query.distance);
+						filtra_lon = true;
+						console.log('Filtrado por longitud');
+						console.log('lon_bigger : '+lon_bigger);
+						console.log('lon_less : '+lon_less);
+					}
+				}
 			}
 			else
 			{
 				if(req.query.distance)
 				{
+					//Se recibe el radio en kilometros y se pasa a radianes
 					var distance_km = req.query.distance/6371;
-					console.log('distacia en km: '+ distance_km);
+					console.log('distacia en radianes: '+ distance_km);
 					location_ok = true;
 				}
 				else
 				{
 					distance_km = 0;
-					console.log('distacia en km: '+ distance_km);
+					console.log('distacia en radianes: '+ distance_km);
 					location_ok = true;
 				}
 			}
@@ -125,10 +157,10 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		{
 			console.log('startdate y location ok');
 			
-			Observaciones.paginate({fecha: {$gte: req.query.startdate, $lt:end_date},
+			Observaciones.paginate({date: {$gte: req.query.startdate, $lt:end_date},
 									location: 
 									{
-										$nearSphere:[req.query.lon,req.query.lat],
+										$nearSphere:[req.query.lat,req.query.lon],
 										$maxDistance: distance_km
 									}
 									}, {page: pagina, limit: limite, select:fields}, function(err,observaciones){
@@ -141,10 +173,10 @@ app.get('/api/observations?', function(req,res) //request respuesta
 			});
 
 		}
-		if(req.query.startdate && !location_ok)
+		if(req.query.startdate && !location_ok && !filtra_lat && !filtra_lon)
 		{
 			console.log('startdate y no location ok');
-			Observaciones.paginate({fecha: {$gte: req.query.startdate, $lt:end_date}},
+			Observaciones.paginate({date: {$gte: req.query.startdate, $lt:end_date}},
 							{page: pagina, limit: limite, select:fields}, function(err,observaciones){
 					if(err)
 					{
@@ -158,7 +190,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 			console.log('no startdate y location ok');
 			Observaciones.paginate({location: 
 									{
-										$nearSphere:[req.query.lon,req.query.lat],
+										$nearSphere:[req.query.lat,req.query.lon],
 										$maxDistance: distance_km
 									}
 									}, {page: pagina, limit: limite, select:fields}, function(err,observaciones){
@@ -170,12 +202,66 @@ app.get('/api/observations?', function(req,res) //request respuesta
 				return res.send(observaciones);
 			});
 		}
+		if(req.query.startdate && filtra_lat)
+		{
+			console.log("filtrado por fecha y latitud");
+			Observaciones.paginate({date: {$gte: req.query.startdate, $lt:end_date},
+				"location.coordinates.0":{$gte: lat_bigger, $lt:lat_less}},
+				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{
+				if(err)
+				{
+					return next(err);
+				}
+				return res.send(observaciones);
+				});
+		}
+		if(!req.query.startdate && filtra_lat)
+		{
+			console.log("filtrado latitud y !fecha");
+			Observaciones.paginate({"location.coordinates.0":{$gte: lat_bigger, $lt:lat_less}},
+				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{
+				if(err)
+				{
+					return next(err);
+				}
+				return res.send(observaciones);
+				});
+		}
+		if(req.query.startdate && filtra_lon)
+		{
+			console.log("filtrado por fecha y longitud");
+			Observaciones.paginate({date: {$gte: req.query.startdate, $lt:end_date},
+				"location.coordinates.1":{$gte: lon_bigger, $lt:lon_less}},
+				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{
+				if(err)
+				{
+					return next(err);
+				}
+				return res.send(observaciones);
+				});
+		}
+		if(!req.query.startdate && filtra_lon)
+		{
+			console.log("filtrado por !fecha y longitud");
+			Observaciones.paginate({"location.coordinates.1":{$gte: lon_bigger, $lt:lon_less}},
+				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{
+				if(err)
+				{
+					return next(err);
+				}
+				return res.send(observaciones);
+				});
+		}
 	}
 	else
 	{
 		console.log('peticion sin campos');
 
-			Observaciones.paginate({}, {page: pagina, limit: limite, select:fields}, function(err,observaciones)
+			Observaciones.paginate({/*"location.coordinates.0":2.12378*/}, {page: pagina, limit: limite, select:fields}, function(err,observaciones)
 			{
 				if(err)
 				{
@@ -212,10 +298,10 @@ app.post('/api/observations', function(req,res) //request respuesta
 	  var isoDate = new Date().toISOString();
 
 	  var observacion = new Observaciones();
-	  observacion.location = { type:"Point",coordinates:[req.body.lon,req.body.lat]},
+	  observacion.location = { type:"Point",coordinates:[req.body.lat,req.body.lon]},
 	  //observacion.location.longitude = req.body.location,
 	  //observacion.longitud = req.body.longitud,
-	  observacion.fecha = isoDate
+	  observacion.date = isoDate
 
 	  observacion.save(function(err, observacion){
 	    if(!err)
