@@ -7,15 +7,18 @@ var mongoose = require('mongoose');
 
 var app = express();
 
-var router = express.Router()
+var router = express.Router();
 var port = process.env.PORT || 8888
 const Observaciones = require('./models/observaciones');
-  app.use(bodyParser.urlencoded({ extended: true  }))
-  app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: true  }));
+  app.use(bodyParser.json());
+  app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
   app.use(paginate.middleware(50,50));
-    //app.use(express.methodOverride());
-    //app.use(express.router);
-
+    
 mongoose.connect('mongodb://starsdb:27017/observaciones',function(err,res){
 if(err) console.log('Error:Conectando a la BD: '+ err);
 	else console.log('Conexion a la BD correcta');
@@ -308,8 +311,8 @@ app.post('/api/observations', function(req,res) //request respuesta
 	    {
 	     console.log('Observacion guardada');
 	     console.log(observacion);
-	     res.status(200).json(observacion)
-
+	     res.status(200).json(observacion);
+	     //res.status(200);
 	   }
 	    else
 	    {
