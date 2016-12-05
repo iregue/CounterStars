@@ -10,6 +10,7 @@ var app = express();
 var router = express.Router();
 var port = process.env.PORT || 8888
 const Observaciones = require('./models/observaciones');
+//const Eventos = require('./models/eventos');
   app.use(bodyParser.urlencoded({ extended: true  }));
   app.use(bodyParser.json());
   app.use(function(req, res, next) {
@@ -304,7 +305,10 @@ app.post('/api/observations', function(req,res) //request respuesta
 	  observacion.location = { type:"Point",coordinates:[req.body.lat,req.body.lon]},
 	  //observacion.location.longitude = req.body.location,
 	  //observacion.longitud = req.body.longitud,
-	  observacion.date = isoDate
+	  observacion.date = isoDate;
+	  observacion.user = "DefaultUser";
+	  observacion.country = req.body.country;
+	  observacion.event = "Gemenidas16";
 
 	  observacion.save(function(err, observacion){
 	    if(!err)
