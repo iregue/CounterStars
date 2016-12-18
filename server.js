@@ -292,9 +292,9 @@ app.post('/api/observations', function(req,res) //request respuesta
 {
   console.log('POST /api/post');
   //Comprobacion parametro de POST correctos
-  	if(!req.body.lon ||!req.body.lat || req.body.country)
+  	if(!req.body.lon ||!req.body.lat || !req.body.country)
 	  {
-	  	res.status(406).send('{Location Error: longitude as log and latitude as lat required country as a country}');
+	  	res.status(406).send('{Location Error: longitude as lon and latitude as lat required country as a country}');
 	  }
 	  else
 	  {
