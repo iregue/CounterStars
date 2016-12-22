@@ -81,7 +81,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		}
 
 	//comprueba si hay que filtar parametros
-	if(req.query.startdate || req.query.lon || req.query.lat || req.query.distance)
+	if(req.query.startdate || req.query.lon || req.query.lat || req.query.distance || req.query.event)
 	{
 		
 		console.log('peticion con campos');
@@ -251,6 +251,19 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		{
 			console.log("filtrado por !fecha y longitud");
 			Observaciones.paginate({"location.coordinates.1":{$gte: lon_bigger, $lt:lon_less}},
+				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{
+				if(err)
+				{
+					return next(err);
+				}
+				return res.send(observaciones);
+				});
+		}
+		//filtrar exclusivamente por evento
+		if(req.query.event){
+			console.log("filtrado por evento");
+			Observaciones.paginate({event: req.query.event},
 				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
 				{
 				if(err)
