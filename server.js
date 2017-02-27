@@ -167,7 +167,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 										$nearSphere:[req.query.lat,req.query.lon],
 										$maxDistance: distance_km
 									}
-									}, {page: pagina, limit: limite, select:fields}, function(err,observaciones){
+									}, {sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones){
 				if(err)
 				{
 					return next(err);
@@ -181,7 +181,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		{
 			console.log('startdate y no location ok');
 			Observaciones.paginate({date: {$gte: req.query.startdate, $lt:end_date}},
-							{page: pagina, limit: limite, select:fields}, function(err,observaciones){
+							{sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones){
 					if(err)
 					{
 						return next(err);
@@ -197,7 +197,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 										$nearSphere:[req.query.lat,req.query.lon],
 										$maxDistance: distance_km
 									}
-									}, {page: pagina, limit: limite, select:fields}, function(err,observaciones){
+									}, {sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones){
 				if(err)
 				{
 					return next(err);
@@ -211,7 +211,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 			console.log("filtrado por fecha y latitud");
 			Observaciones.paginate({date: {$gte: req.query.startdate, $lt:end_date},
 				"location.coordinates.0":{$gte: lat_bigger, $lt:lat_less}},
-				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones)
 				{
 				if(err)
 				{
@@ -224,7 +224,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		{
 			console.log("filtrado latitud y !fecha");
 			Observaciones.paginate({"location.coordinates.0":{$gte: lat_bigger, $lt:lat_less}},
-				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones)
 				{
 				if(err)
 				{
@@ -238,7 +238,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 			console.log("filtrado por fecha y longitud");
 			Observaciones.paginate({date: {$gte: req.query.startdate, $lt:end_date},
 				"location.coordinates.1":{$gte: lon_bigger, $lt:lon_less}},
-				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones)
 				{
 				if(err)
 				{
@@ -251,7 +251,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		{
 			console.log("filtrado por !fecha y longitud");
 			Observaciones.paginate({"location.coordinates.1":{$gte: lon_bigger, $lt:lon_less}},
-				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones)
 				{
 				if(err)
 				{
@@ -264,7 +264,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 		if(req.query.event){
 			console.log("filtrado por evento");
 			Observaciones.paginate({event: req.query.event},
-				{page: pagina, limit: limite, select:fields}, function(err,observaciones)
+				{sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones)
 				{
 				if(err)
 				{
@@ -278,7 +278,7 @@ app.get('/api/observations?', function(req,res) //request respuesta
 	{
 		console.log('peticion sin campos');
 
-			Observaciones.paginate({/*"location.coordinates.0":2.12378*/}, {page: pagina, limit: limite, select:fields}, function(err,observaciones)
+			Observaciones.paginate({}, {sort: {date:1},page: pagina, limit: limite, select:fields}, function(err,observaciones)
 			{
 				if(err)
 				{
@@ -321,7 +321,7 @@ app.post('/api/observations', function(req,res) //request respuesta
 	  observacion.date = isoDate;
 	  observacion.user = "DefaultUser";
 	  observacion.country = req.body.country;
-	  observacion.event = "Gemenidas16";
+	  observacion.event = "Geminidas16";
 
 	  observacion.save(function(err, observacion){
 	    if(!err)
